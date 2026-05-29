@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -12,15 +12,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   default: "Произошла ошибка. Попробуйте ещё раз.",
 }
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter()
   const params = useSearchParams()
   const callbackUrl = params.get("callbackUrl") ?? "/dashboard"
-
   const [form, setForm] = useState({ username: "", password: "" })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-
   const urlError = params.get("error")
 
   async function handleSubmit(e: React.FormEvent) {
@@ -114,5 +112,13 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Загрузка...</div>}>
+      <SignInForm />
+    </Suspense>
   )
 }
