@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  email        String?    @unique
+  passwordHash String
+  telegramId   String?    @unique
+  isVerified   Boolean    @default(false)
+  verifiedAt   DateTime?
+  authMethod   AuthMethod @default(EMAIL)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  portfolios Portfolio[]
+}
+
+enum AuthMethod {
+  EMAIL
+  TELEGRAM
+}
+
+model Portfolio {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  viewCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sections Section[]
+
+  @@index([userId])
+  @@index([slug])
+}
+
+model Section {
+  id          String    @id @default(cuid())
+  title       String
+  order       Int
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  items       Item[]
+
+  @@index([portfolioId, order])
+}
+
+model Item {
+  id         String   @id @default(cuid())
+  order      Int
+  sectionId  String
+  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  fieldsJson Json     @default("{}")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customFields CustomField[]
+
+  @@index([sectionId, order])
+}
+
+model CustomField {
+  id     String    @id @default(cuid())
+  itemId String
+  item   Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  key    String
+  value  String
+  type   FieldType @default(TEXT)
+
+  @@unique([itemId, key])
+  @@index([key, value])
+}
+
+enum FieldType {
+  TEXT
+  URL
+  DATE
+  IMAGE
+}
