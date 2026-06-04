@@ -1,15 +1,8 @@
-import nodemailer from "nodemailer"
+import { Resend } from "resend"
 import { logger } from "./logger"
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT ?? 587),
-  secure: process.env.EMAIL_SECURE === "true",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-})
+const resendApiKey = process.env.RESEND_API_KEY
+const resend = resendApiKey ? new Resend(resendApiKey) : null
 
 function codeEmailHtml(code: string, type: "registration" | "reset"): string {
   const title = type === "registration" ? "Подтверждение регистрации" : "Сброс пароля"
@@ -66,9 +59,13 @@ export async function sendVerificationEmail(
   email: string,
   code: string
 ): Promise<void> {
+  if (!resend) {
+    logger.warn({ email }, "Email service not configured")
+    return
+  }
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM ?? "CV Platform <onboarding@resend.dev>",
       to: email,
       subject: `${code} — ваш код подтверждения`,
       html: codeEmailHtml(code, "registration"),
@@ -84,9 +81,13 @@ export async function sendPasswordResetEmail(
   email: string,
   code: string
 ): Promise<void> {
+  if (!resend) {
+    logger.warn({ email }, "Email service not configured")
+    return
+  }
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM ?? "CV Platform <onboarding@resend.dev>",
       to: email,
       subject: `${code} — код сброса пароля`,
       html: codeEmailHtml(code, "reset"),
