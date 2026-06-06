@@ -60,19 +60,20 @@ export async function sendVerificationEmail(
   code: string
 ): Promise<void> {
   if (!resend) {
-    logger.warn({ email }, "Email service not configured")
-    return
+    const err = new Error("RESEND_API_KEY is not set")
+    logger.error({ err, email }, "Email service not configured")
+    throw err
   }
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: process.env.EMAIL_FROM ?? "CV Platform <onboarding@resend.dev>",
       to: email,
       subject: `${code} — ваш код подтверждения`,
       html: codeEmailHtml(code, "registration"),
     })
-    logger.info({ email: email.replace(/(.{2})(.*)(@.*)/, "$1***$3") }, "Verification email sent")
-  } catch (error) {
-    logger.error({ error, email }, "Failed to send verification email")
+    logger.info({ email: email.replace(/(.{2})(.*)(@.*)/, "$1***$3"), result }, "Verification email sent")
+  } catch (error: any) {
+    logger.error({ error, email, message: error?.message, code: error?.code }, "Failed to send verification email")
     throw error
   }
 }
