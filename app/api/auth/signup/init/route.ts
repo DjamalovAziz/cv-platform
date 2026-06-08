@@ -87,9 +87,12 @@ export async function POST(req: NextRequest) {
     await redis.del(RedisKeys.code(userId))
     await redis.set(RedisKeys.code(userId), code, { ex: TTL.CODE })
 
-    sendVerificationEmail(contact, code).catch((err) =>
-      logger.error({ err, userId }, "Failed to send verification email")
-    )
+    try {
+      await sendVerificationEmail(contact, code)
+    } catch (err) {
+      logger.error({ err, userId, contact }, "Signup email failed")
+      return NextResponse.json({ error: "EMAIL_ERROR" }, { status: 502 })
+    }
 
     logger.info({ userId, method: "EMAIL" }, "Signup initiated")
     return NextResponse.json({ pendingId: userId, expiresIn: TTL.PENDING_REG, method: "EMAIL" })
