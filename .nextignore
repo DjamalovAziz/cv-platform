@@ -1,0 +1,3 @@
+# Ignore webhook server - it's for Render only
+webhook-server.ts
+render.yaml

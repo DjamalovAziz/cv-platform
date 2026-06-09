@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: cv-platform-bot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npx tsx webhook-server.ts
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
