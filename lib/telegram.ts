@@ -1,4 +1,4 @@
-import { Bot, webhookCallback } from "grammy"
+import { Bot } from "grammy"
 import { redis, RedisKeys, TTL } from "./redis"
 import { logger } from "./logger"
 
@@ -26,7 +26,6 @@ bot.command("start", async (ctx) => {
     const code = String(Math.floor(1000 + Math.random() * 9000))
     const ttl = await redis.ttl(RedisKeys.pendingReg(pendingId))
 
-    // Update pending_reg with telegramChatId + new code
     await redis.del(RedisKeys.code(pendingId))
     await redis.set(RedisKeys.code(pendingId), code, { ex: TTL.CODE })
     await redis.set(
@@ -42,7 +41,7 @@ bot.command("start", async (ctx) => {
     return
   }
 
-  // Password reset flow: /start reset_{resetToken}
+  // Password reset flow
   if (payload?.startsWith("reset_")) {
     const resetToken = payload.slice(6)
 
@@ -61,7 +60,6 @@ bot.command("start", async (ctx) => {
     return
   }
 
-  // Default welcome
   await ctx.reply(
     "👋 Привет! Я бот CV Platform.\n\n" +
     "Используйте ссылку с сайта для подтверждения регистрации или сброса пароля."
@@ -72,7 +70,9 @@ bot.catch((err) => {
   logger.error({ err }, "Telegram bot error")
 })
 
-export const handleTelegramWebhook = webhookCallback(bot, "std/http")
+export async function handleTelegramWebhook(update: any): Promise<void> {
+  await bot.handleUpdate(update)
+}
 
 export async function sendTelegramResetDeepLink(
   chatId: number,

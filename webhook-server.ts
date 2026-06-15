@@ -22,14 +22,14 @@ const server = createServer(async (req, res) => {
       const result = await handleTelegramWebhook(update)
 
       if (!res.writableEnded) {
-        res.writeHead(200, { "content-type": "application/json" })
-        res.end(JSON.stringify(result ?? {}))
+        res.writeHead(200, { "content-type": "text/plain" })
+        res.end("OK")
       }
     } catch (err) {
       console.error("Webhook error", err)
       if (!res.writableEnded) {
-        res.writeHead(200, { "content-type": "application/json" })
-        res.end(JSON.stringify({ ok: true }))
+        res.writeHead(200, { "content-type": "text/plain" })
+        res.end("OK")
       }
     }
     return
