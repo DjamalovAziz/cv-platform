@@ -9,4 +9,9 @@ export default defineConfig({
       reporter: ["text", "json"],
     },
   },
+  resolve: {
+    alias: {
+      "@": "/C:/Users/Aziz/Projects/cv-platform",
+    },
+  },
 })

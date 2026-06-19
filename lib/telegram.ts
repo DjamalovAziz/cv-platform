@@ -85,6 +85,7 @@ bot.catch((err) => {
 })
 
 export async function handleTelegramWebhook(update: any): Promise<void> {
+  await bot.init()
   await bot.handleUpdate(update)
 }
 

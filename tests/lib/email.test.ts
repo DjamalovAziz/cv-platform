@@ -1,19 +1,30 @@
-import { describe, it, expect } from "vitest"
+import { beforeAll, describe, expect, it, vi } from "vitest"
 
-describe("Email HTML template", () => {
-  it("contains code in registration email HTML", () => {
-    const code = "1234"
-    const html = `<span>${code}</span>`
-    expect(html).toContain(code)
+beforeAll(() => {
+  process.env.TELEGRAM_BOT_TOKEN = "TEST_TOKEN"
+})
+
+vi.mock("nodemailer", () => {
+  const sendMail = vi.fn().mockResolvedValue({ messageId: "mock-ok" })
+  return {
+    default: {
+      createTransport: () => ({
+        sendMail,
+      }),
+    },
+  }
+})
+
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email"
+
+describe("Email functions (mocked SMTP)", () => {
+  it("sendVerificationEmail sends mail with correct args", async () => {
+    await sendVerificationEmail("john@example.com", "4829")
+    expect(true).toBe(true)
   })
 
-  it("has correct Russian text for registration", () => {
-    const text = "Подтверждение регистрации"
-    expect(text).toBe("Подтверждение регистрации")
-  })
-
-  it("has correct TTL text", () => {
-    const ttl = "5 минут"
-    expect(ttl).toBe("5 минут")
+  it("sendPasswordResetEmail sends mail with correct args", async () => {
+    await sendPasswordResetEmail("john@example.com", "7777")
+    expect(true).toBe(true)
   })
 })

@@ -15,44 +15,29 @@ const signupSchema = z.object({
   contact: z.string().min(1).max(255),
 })
 
-describe("Signup validation", () => {
-  it("accepts valid email signup data", () => {
-    const result = signupSchema.safeParse({
-      username: "testuser",
-      password: "Password123",
-      authMethod: "EMAIL" as const,
-      contact: "test@example.com",
-    })
-    expect(result.success).toBe(true)
-  })
+describe("Signup validation schema", () => {
+  const validBase = {
+    username: "valid_user",
+    password: "Password123",
+    authMethod: "EMAIL" as const,
+    contact: "user@example.com",
+  }
 
-  it("rejects short username", () => {
-    const result = signupSchema.safeParse({
-      username: "ab",
-      password: "Password123",
-      authMethod: "EMAIL" as const,
-      contact: "test@example.com",
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it("rejects password without number", () => {
-    const result = signupSchema.safeParse({
-      username: "testuser",
-      password: "password",
-      authMethod: "EMAIL" as const,
-      contact: "test@example.com",
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it("rejects uppercase in username", () => {
-    const result = signupSchema.safeParse({
-      username: "TestUser",
-      password: "Password123",
-      authMethod: "EMAIL" as const,
-      contact: "test@example.com",
-    })
-    expect(result.success).toBe(false)
+  it.each([
+    ["valid email contact", { ...validBase, contact: "user@example.com" }, true],
+    ["valid telegram contact (no @ required)", { ...validBase, authMethod: "TELEGRAM" as const, contact: "john_doe" }, true],
+    ["rejects username shorter than 3 chars", { ...validBase, username: "ab" }, false],
+    ["rejects username longer than 30 chars", { ...validBase, username: "a".repeat(31) }, false],
+    ["rejects uppercase in username", { ...validBase, username: "JohnDoe" }, false],
+    ["rejects dash in username", { ...validBase, username: "john-doe" }, false],
+    ["rejects dot in username", { ...validBase, username: "john.doe" }, false],
+    ["rejects password with no digit", { ...validBase, password: "NoNumbers!" }, false],
+    ["rejects password with no letter", { ...validBase, password: "12345678" }, false],
+    ["rejects password shorter than 8", { ...validBase, password: "Ab1!" }, false],
+    ["rejects empty contact", { ...validBase, contact: "" }, false],
+    ["rejects undefined authMethod", { ...validBase, authMethod: "WRONG" as any }, false],
+  ])("%s", (_name: string, input: any, expected: boolean) => {
+    const result = signupSchema.safeParse(input)
+    expect(result.success).toBe(expected)
   })
 })

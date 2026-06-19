@@ -16,10 +16,10 @@ export const RedisKeys = {
 
 // TTLs in seconds
 export const TTL = {
-  PENDING_REG: 15 * 60,    // 15 min
-  CODE: 5 * 60,            // 5 min
-  RESET_TOKEN: 10 * 60,    // 10 min
-  CV_CACHE: 5 * 60,        // 5 min
+  PENDING_REG: 15 * 60,
+  CODE: 5 * 60,
+  RESET_TOKEN: 10 * 60,
+  CV_CACHE: 5 * 60,
 } as const
 
 export async function isRedisAvailable(): Promise<boolean> {
@@ -29,4 +29,18 @@ export async function isRedisAvailable(): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+export async function setCode(pendingId: string, code: string) {
+  await redis.set(RedisKeys.code(pendingId), code, { ex: TTL.CODE })
+}
+
+export async function setPendingReg(
+  pendingId: string,
+  data: Record<string, any>,
+  ttl = TTL.PENDING_REG
+) {
+  await redis.set(RedisKeys.pendingReg(pendingId), JSON.stringify(data), {
+    ex: ttl,
+  })
 }
