@@ -85,8 +85,18 @@ bot.catch((err) => {
 })
 
 export async function handleTelegramWebhook(update: any): Promise<void> {
-  await bot.init()
-  await bot.handleUpdate(update)
+  try {
+    await bot.init()
+  } catch (initErr) {
+    logger.error({ err: initErr }, "Failed to initialize Telegram bot")
+    throw new Error("Bot initialization failed")
+  }
+  try {
+    await bot.handleUpdate(update)
+  } catch (handleErr) {
+    logger.error({ err: handleErr, update }, "Failed to handle Telegram update")
+    throw handleErr
+  }
 }
 
 export async function sendTelegramResetDeepLink(
