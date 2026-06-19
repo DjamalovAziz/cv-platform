@@ -15,29 +15,36 @@ bot.command("start", async (ctx) => {
   if (payload?.startsWith("reg_")) {
     const pendingId = payload.slice(4)
 
-    const raw = await redis.get<string>(RedisKeys.pendingReg(pendingId))
-    if (!raw) {
+    try {
+      const raw = await redis.get<string>(RedisKeys.pendingReg(pendingId))
+      if (!raw) {
+        return ctx.reply(
+          "⏰ Ссылка устарела. Пожалуйста, зарегистрируйтесь заново на сайте."
+        )
+      }
+
+      const data = JSON.parse(raw)
+      const code = String(Math.floor(1000 + Math.random() * 9000))
+      const ttl = await redis.ttl(RedisKeys.pendingReg(pendingId))
+
+      await redis.del(RedisKeys.code(pendingId))
+      await redis.set(RedisKeys.code(pendingId), code, { ex: TTL.CODE })
+      await redis.set(
+        RedisKeys.pendingReg(pendingId),
+        JSON.stringify({ ...data, telegramChatId: ctx.chat.id }),
+        { ex: Math.max(ttl, 1) }
+      )
+
+      await ctx.reply(
+        `✅ Ваш код подтверждения:\n\n*${code}*\n\nДействителен 5 минут. Введите его на сайте.`,
+        { parse_mode: "Markdown" }
+      )
+    } catch (err) {
+      logger.error({ err, pendingId }, "Telegram reg flow error")
       return ctx.reply(
-        "⏰ Ссылка устарела. Пожалуйста, зарегистрируйтесь заново на сайте."
+        "❌ Произошла ошибка. Попробуйте зарегистрироваться заново или обратитесь в поддержку."
       )
     }
-
-    const data = JSON.parse(raw)
-    const code = String(Math.floor(1000 + Math.random() * 9000))
-    const ttl = await redis.ttl(RedisKeys.pendingReg(pendingId))
-
-    await redis.del(RedisKeys.code(pendingId))
-    await redis.set(RedisKeys.code(pendingId), code, { ex: TTL.CODE })
-    await redis.set(
-      RedisKeys.pendingReg(pendingId),
-      JSON.stringify({ ...data, telegramChatId: ctx.chat.id }),
-      { ex: Math.max(ttl, 1) }
-    )
-
-    await ctx.reply(
-      `✅ Ваш код подтверждения:\n\n*${code}*\n\nДействителен 5 минут. Введите его на сайте.`,
-      { parse_mode: "Markdown" }
-    )
     return
   }
 
@@ -45,18 +52,25 @@ bot.command("start", async (ctx) => {
   if (payload?.startsWith("reset_")) {
     const resetToken = payload.slice(6)
 
-    const raw = await redis.get<string>(RedisKeys.resetToken(resetToken))
-    if (!raw) {
+    try {
+      const raw = await redis.get<string>(RedisKeys.resetToken(resetToken))
+      if (!raw) {
+        return ctx.reply(
+          "⏰ Ссылка устарела. Запросите сброс пароля заново на сайте."
+        )
+      }
+
+      const { code } = JSON.parse(raw)
+      await ctx.reply(
+        `🔑 Ваш код сброса пароля:\n\n*${code}*\n\nДействителен 10 минут. Введите его на сайте.`,
+        { parse_mode: "Markdown" }
+      )
+    } catch (err) {
+      logger.error({ err, resetToken }, "Telegram reset flow error")
       return ctx.reply(
-        "⏰ Ссылка устарела. Запросите сброс пароля заново на сайте."
+        "❌ Произошла ошибка. Запросите сброс пароля заново."
       )
     }
-
-    const { code } = JSON.parse(raw)
-    await ctx.reply(
-      `🔑 Ваш код сброса пароля:\n\n*${code}*\n\nДействителен 10 минут. Введите его на сайте.`,
-      { parse_mode: "Markdown" }
-    )
     return
   }
 

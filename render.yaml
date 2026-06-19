@@ -18,3 +18,5 @@ services:
         sync: false
       - key: TELEGRAM_WEBHOOK_SECRET
         sync: false
+      - key: NEXTAUTH_URL
+        value: https://cv-platform-aziz.vercel.app

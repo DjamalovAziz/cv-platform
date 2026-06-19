@@ -1,5 +1,5 @@
 import { createServer } from "node:http"
-import { bot, handleTelegramWebhook } from "./lib/telegram"
+import { handleTelegramWebhook } from "./lib/telegram"
 
 const PORT = process.env.PORT ?? 3001
 
@@ -19,7 +19,7 @@ const server = createServer(async (req, res) => {
         req.on("error", reject)
       })
 
-      const result = await handleTelegramWebhook(update)
+      await handleTelegramWebhook(update)
 
       if (!res.writableEnded) {
         res.writeHead(200, { "content-type": "text/plain" })
