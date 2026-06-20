@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "CODE_EXPIRED" }, { status: 400 })
   }
 
-  if (storedCode !== code) {
+  const storedCodeStr = typeof storedCode === "string" ? storedCode : String(storedCode)
+
+  if (storedCodeStr !== code) {
     securityLogger.warn({ pendingId }, "Invalid verification code attempt")
     return NextResponse.json({ error: "INVALID_CODE" }, { status: 400 })
   }
