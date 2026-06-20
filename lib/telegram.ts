@@ -23,7 +23,7 @@ bot.command("start", async (ctx) => {
         )
       }
 
-      const data = JSON.parse(raw)
+      const data = typeof raw === "string" ? JSON.parse(raw) : raw
       const code = String(Math.floor(1000 + Math.random() * 9000))
       const ttl = await redis.ttl(RedisKeys.pendingReg(pendingId))
 
